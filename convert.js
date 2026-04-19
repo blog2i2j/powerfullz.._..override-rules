@@ -925,7 +925,6 @@ function main(config) {
         frontProxySelector,
     });
 
-
     // const globalProxies = proxyGroups.map((item) => item.name);
     // proxyGroups.push({
     //     name: PROXY_GROUPS.GLOBAL,
@@ -934,7 +933,6 @@ function main(config) {
     //     type: "select",
     //     proxies: globalProxies,
     // });
-
 
     const finalRules = buildRules({ quicEnabled });
 
