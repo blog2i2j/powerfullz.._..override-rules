@@ -405,7 +405,7 @@ function stripNodeSuffix(groupNames) {
     return groupNames.map((name) => name.replace(suffixPattern, ""));
 }
 
-function buildBaseLists({ landing, lowCostNodes, countryGroupNames }) {
+function buildBaseLists({ landing, lowCostNodes, countryGroupNames, nonLandingNodes }) {
     const lowCost = lowCostNodes.length > 0 || regexFilter;
 
     /**
@@ -422,10 +422,11 @@ function buildBaseLists({ landing, lowCostNodes, countryGroupNames }) {
     );
 
     /**
-     * 大多数策略组的通用候选列表：以"选择代理"为首选，再跟各国家组、低倍率、手动、直连。
+     * 大多数策略组的通用候选列表：以"选择代理"为首选，再跟落地节点（可选）、各国家组、低倍率、手动、直连。
      */
     const defaultProxies = buildList(
         PROXY_GROUPS.SELECT,
+        landing && PROXY_GROUPS.LANDING,
         countryGroupNames,
         lowCost && PROXY_GROUPS.LOW_COST,
         PROXY_GROUPS.MANUAL,
@@ -437,6 +438,7 @@ function buildBaseLists({ landing, lowCostNodes, countryGroupNames }) {
      */
     const defaultProxiesDirect = buildList(
         PROXY_GROUPS.DIRECT,
+        landing && PROXY_GROUPS.LANDING,
         countryGroupNames,
         lowCost && PROXY_GROUPS.LOW_COST,
         PROXY_GROUPS.SELECT,
@@ -455,7 +457,22 @@ function buildBaseLists({ landing, lowCostNodes, countryGroupNames }) {
         "DIRECT"
     );
 
-    return { defaultProxies, defaultProxiesDirect, defaultSelector, defaultFallback };
+    /**
+     * "前置代理"候选列表：优先国家节点组。
+     * 非 regex 模式下，再拼接所有非落地节点名称枚举（如包含"美国 01"，排除"美国落地 01"）。
+     */
+    const frontProxySelector = [...new Set(buildList(
+        countryGroupNames,
+        !regexFilter && nonLandingNodes
+    ))];
+
+    return {
+        defaultProxies,
+        defaultProxiesDirect,
+        defaultSelector,
+        defaultFallback,
+        frontProxySelector,
+    };
 }
 
 function buildRules({ quicEnabled }) {
@@ -501,10 +518,23 @@ function parseLowCost(config) {
         .map((proxy) => proxy.name);
 }
 
-function parseLandingNodes(config) {
-    return (config.proxies || [])
-        .filter((proxy) => LANDING_REGEX.test(proxy.name))
-        .map((proxy) => proxy.name);
+function parseNodesByLanding(config) {
+    const landingNodes = [];
+    const nonLandingNodes = [];
+
+    for (const proxy of config.proxies || []) {
+        const name = proxy.name;
+        if (!name) continue;
+
+        if (LANDING_REGEX.test(name)) {
+            landingNodes.push(name);
+            continue;
+        }
+
+        nonLandingNodes.push(name);
+    }
+
+    return { landingNodes, nonLandingNodes };
 }
 
 /**
@@ -625,6 +655,7 @@ function buildProxyGroups({
     defaultProxiesDirect,
     defaultSelector,
     defaultFallback,
+    frontProxySelector,
 }) {
     /**
      * 预先判断是否存在特定地区的节点，用于为 Bilibili、Bahamut、Truth Social 等
@@ -633,17 +664,6 @@ function buildProxyGroups({
     const hasTW = countries.includes("台湾");
     const hasHK = countries.includes("香港");
     const hasUS = countries.includes("美国");
-
-    /**
-     * "前置代理"组的候选列表：从 `defaultSelector` 中移除"落地节点"和"故障转移"，
-     * 避免前置代理与落地节点形成循环引用，以及与故障转移组相互嵌套。
-     * 仅在 `landing=true` 时使用；否则置为空数组。
-     */
-    const frontProxySelector = landing
-        ? defaultSelector.filter(
-              (name) => name !== PROXY_GROUPS.LANDING && name !== PROXY_GROUPS.FALLBACK
-          )
-        : [];
 
     return [
         {
@@ -660,36 +680,36 @@ function buildProxyGroups({
         },
         landing
             ? {
-                  name: PROXY_GROUPS.FRONT_PROXY,
-                  icon: `${CDN_URL}/gh/Koolson/Qure@master/IconSet/Color/Area.png`,
-                  type: "select",
-                  /**
-                   * regex 模式：`include-all` 拉取所有节点，`exclude-filter` 排除落地节点，
-                   * 同时在 `proxies` 里附加手动指定的候选组名列表（各国家组等）。
-                   * 枚举模式：直接列出候选组名（落地节点已在构建 `frontProxySelector` 时过滤）。
-                   */
-                  ...(regexFilter
-                      ? {
-                            "include-all": true,
-                            "exclude-filter": LANDING_PATTERN,
-                            proxies: frontProxySelector,
-                        }
-                      : { proxies: frontProxySelector }),
-              }
+                name: PROXY_GROUPS.FRONT_PROXY,
+                icon: `${CDN_URL}/gh/Koolson/Qure@master/IconSet/Color/Area.png`,
+                type: "select",
+                /**
+                 * regex 模式：`include-all` 拉取所有节点，`exclude-filter` 排除落地节点，
+                 * 同时在 `proxies` 里附加手动指定的候选组名列表（各国家组等）。
+                 * 枚举模式：直接列出候选组名（落地节点已在构建 `frontProxySelector` 时过滤）。
+                 */
+                ...(regexFilter
+                    ? {
+                        "include-all": true,
+                        "exclude-filter": LANDING_PATTERN,
+                        proxies: frontProxySelector,
+                    }
+                    : { proxies: frontProxySelector }),
+            }
             : null,
         landing
             ? {
-                  name: PROXY_GROUPS.LANDING,
-                  icon: `${CDN_URL}/gh/Koolson/Qure@master/IconSet/Color/Airport.png`,
-                  type: "select",
-                  /**
-                   * regex 模式：`include-all` + `filter` 动态筛选落地节点。
-                   * 枚举模式：直接列出已识别的落地节点名称。
-                   */
-                  ...(regexFilter
-                      ? { "include-all": true, filter: LANDING_PATTERN }
-                      : { proxies: landingNodes }),
-              }
+                name: PROXY_GROUPS.LANDING,
+                icon: `${CDN_URL}/gh/Koolson/Qure@master/IconSet/Color/Airport.png`,
+                type: "select",
+                /**
+                 * regex 模式：`include-all` + `filter` 动态筛选落地节点。
+                 * 枚举模式：直接列出已识别的落地节点名称。
+                 */
+                ...(regexFilter
+                    ? { "include-all": true, filter: LANDING_PATTERN }
+                    : { proxies: landingNodes }),
+            }
             : null,
         {
             name: PROXY_GROUPS.STATIC_RESOURCES,
@@ -820,14 +840,14 @@ function buildProxyGroups({
         },
         lowCostNodes.length > 0 || regexFilter
             ? {
-                  name: PROXY_GROUPS.LOW_COST,
-                  icon: `${CDN_URL}/gh/Koolson/Qure@master/IconSet/Color/Lab.png`,
-                  type: "url-test",
-                  url: "https://cp.cloudflare.com/generate_204",
-                  ...(!regexFilter
-                      ? { proxies: lowCostNodes }
-                      : { "include-all": true, filter: "(?i)0\\.[0-5]|低倍率|省流|大流量|实验性" }),
-              }
+                name: PROXY_GROUPS.LOW_COST,
+                icon: `${CDN_URL}/gh/Koolson/Qure@master/IconSet/Color/Lab.png`,
+                type: "url-test",
+                url: "https://cp.cloudflare.com/generate_204",
+                ...(!regexFilter
+                    ? { proxies: lowCostNodes }
+                    : { "include-all": true, filter: "(?i)0\\.[0-5]|低倍率|省流|大流量|实验性" }),
+            }
             : null,
         {
             name: PROXY_GROUPS.AUTO,
@@ -863,15 +883,18 @@ function main(config) {
      */
     const countryInfo = parseCountries(resultConfig);
     const lowCostNodes = parseLowCost(resultConfig);
-    const landingNodes = landing ? parseLandingNodes(resultConfig) : [];
     const countryGroupNames = getCountryGroupNames(countryInfo, countryThreshold);
     const countries = stripNodeSuffix(countryGroupNames);
+
+    const { landingNodes, nonLandingNodes } = landing
+        ? parseNodesByLanding(resultConfig)
+        : { landingNodes: [], nonLandingNodes: [] };
 
     /**
      * 构建各类通用候选列表，供后续策略组复用。
      */
-    const { defaultProxies, defaultProxiesDirect, defaultSelector, defaultFallback } =
-        buildBaseLists({ landing, lowCostNodes, countryGroupNames });
+    const { defaultProxies, defaultProxiesDirect, defaultSelector, defaultFallback, frontProxySelector } =
+        buildBaseLists({ landing, lowCostNodes, countryGroupNames, nonLandingNodes });
 
     /**
      * 为每个地区生成对应的 `url-test` 或 `load-balance` 自动测速组。
@@ -897,20 +920,30 @@ function main(config) {
         defaultProxiesDirect,
         defaultSelector,
         defaultFallback,
+        frontProxySelector,
     });
 
     /**
      * GLOBAL 组需要枚举所有已生成的策略组名称，因此在其他组构建完成后追加，
      * 同时保留 `include-all` 以确保与各内核的兼容性。
+     *
+     * 例外：如果订阅中存在带 `dialer-proxy` 的节点（典型场景是链式代理的落地节点），
+     * 则跳过生成 GLOBAL 组。原因是 Stash 将 `GLOBAL` 视为保留名并做特殊展开，
+     * 只要 config 里定义了自定义 GLOBAL 组，无论是否使用 `include-all`，
+     * Stash 都会判定含 `dialer-proxy` 的节点形成循环引用而拒绝加载。
+     * 省略 GLOBAL 后，Stash/Mihomo 内核仍提供内置的 GLOBAL，功能不受影响。
      */
-    const globalProxies = proxyGroups.map((item) => item.name);
-    proxyGroups.push({
-        name: PROXY_GROUPS.GLOBAL,
-        icon: `${CDN_URL}/gh/Koolson/Qure@master/IconSet/Color/Global.png`,
-        "include-all": true,
-        type: "select",
-        proxies: globalProxies,
-    });
+    const hasDialerProxy = (resultConfig.proxies || []).some((proxy) => proxy["dialer-proxy"]);
+    if (!hasDialerProxy) {
+        const globalProxies = proxyGroups.map((item) => item.name);
+        proxyGroups.push({
+            name: PROXY_GROUPS.GLOBAL,
+            icon: `${CDN_URL}/gh/Koolson/Qure@master/IconSet/Color/Global.png`,
+            "include-all": true,
+            type: "select",
+            proxies: globalProxies,
+        });
+    }
 
     const finalRules = buildRules({ quicEnabled });
 
