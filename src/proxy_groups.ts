@@ -55,14 +55,12 @@ export function buildCountryProxyGroups({
             };
         }
 
-        if (!loadBalance) {
-            Object.assign(groupConfig, {
-                url: "https://cp.cloudflare.com/generate_204",
-                interval: 60,
-                tolerance: 20,
-                lazy: false,
-            });
-        }
+        Object.assign(groupConfig, {
+            url: "https://cp.cloudflare.com/generate_204",
+            interval: 60,
+            tolerance: 20,
+            ...(loadBalance ? { strategy: "sticky-sessions" } : {}),
+        });
 
         groups.push(groupConfig);
     }
