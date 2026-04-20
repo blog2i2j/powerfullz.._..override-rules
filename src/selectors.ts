@@ -1,4 +1,4 @@
-import { PROXY_GROUPS } from "./config";
+import { PROXY_GROUPS } from "./constants";
 import type { BaseLists, BuildBaseListsInput } from "./types";
 
 /**

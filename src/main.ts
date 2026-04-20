@@ -14,17 +14,18 @@ import {
     PROXY_GROUPS,
     ruleProviders,
     snifferConfig,
-} from "./config";
-import { buildFeatureFlags } from "./flags";
-import { buildCountryProxyGroups, buildProxyGroups } from "./groups";
+} from "./constants";
+import { buildFeatureFlags } from "./args";
+import { buildCountryProxyGroups, buildProxyGroups } from "./proxy_groups";
 import {
     getCountryGroupNames,
     parseCountries,
     parseLowCost,
     parseNodesByLanding,
     stripNodeSuffix,
-} from "./nodes";
-import { buildDnsConfig, buildRules } from "./rules";
+} from "./proxy_parser";
+import { buildRules } from "./rules";
+import { buildDnsConfig } from "./dns";
 import { buildBaseLists } from "./selectors";
 import type { ClashConfig, ScriptArgs } from "./types";
 

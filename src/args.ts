@@ -1,4 +1,4 @@
-import { FEATURE_FLAG_DEFAULTS } from "./config";
+import { FEATURE_FLAG_DEFAULTS } from "./constants";
 import type { FeatureFlags, ScriptArgs } from "./types";
 
 type FlagSpec = Record<string, keyof Omit<FeatureFlags, "countryThreshold">>;

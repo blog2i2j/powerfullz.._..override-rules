@@ -6,7 +6,7 @@ import {
     NODE_SUFFIX,
     PROXY_GROUPS,
     countriesMeta,
-} from "./config";
+} from "./constants";
 import type {
     BuildCountryProxyGroupsInput,
     BuildProxyGroupsInput,

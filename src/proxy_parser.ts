@@ -1,4 +1,4 @@
-import { LANDING_REGEX, LOW_COST_REGEX, NODE_SUFFIX, countriesMeta } from "./config";
+import { LANDING_REGEX, LOW_COST_REGEX, NODE_SUFFIX, countriesMeta } from "./constants";
 import type { ClashConfig, CountryInfoItem } from "./types";
 
 const COUNTRY_REGEX_MAP = Object.fromEntries(
