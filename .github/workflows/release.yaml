@@ -123,9 +123,9 @@ jobs:
           generate_release_notes: true
           append_body: true
           body: |
-            Artifact distribution has been synced to the `dist` branch.
+            构建产物已同步至 `dist` 分支。
 
-            - JS (latest): `https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/dist/latest/convert.min.js`
-            - JS (version): `https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/dist/${{ github.ref_name }}/convert.min.js`
-            - YAML index (latest): `https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/dist/latest/manifest.json`
-            - YAML index (version): `https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/dist/${{ github.ref_name }}/manifest.json`
+            - JS 覆写 (最新版)：`https://gcore.jsdelivr.net/gh/${{ github.repository }}@dist/latest/convert.min.js`
+            - JS 覆写 (当前版本)：`https://gcore.jsdelivr.net/gh/${{ github.repository }}@dist/${{ github.ref_name }}/convert.min.js`
+            - YAML 索引 (最新版)：`https://gcore.jsdelivr.net/gh/${{ github.repository }}@dist/latest/manifest.json`
+            - YAML 索引 (当前版本)：`https://gcore.jsdelivr.net/gh/${{ github.repository }}@dist/${{ github.ref_name }}/manifest.json`
