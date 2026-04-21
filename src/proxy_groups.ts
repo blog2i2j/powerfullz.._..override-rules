@@ -274,7 +274,6 @@ export function buildProxyGroups({
             proxies: defaultFallback,
             interval: 60,
             tolerance: 20,
-            lazy: false,
         },
         ...countryProxyGroups,
     ];
