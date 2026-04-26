@@ -1,14 +1,17 @@
-import { CDN_URL, NODE_SUFFIX, PROXY_GROUPS, countriesMeta } from "./constants";
+import {
+    CDN_URL,
+    LANDING_NODE_MATCHER,
+    LOW_COST_NODE_MATCHER,
+    NODE_SUFFIX,
+    PROXY_GROUPS,
+    countriesMeta,
+} from "./constants";
 import type {
     BuildCountryProxyGroupsInput,
     BuildProxyGroupsInput,
     CountryInfoItem,
     ProxyGroup,
 } from "./types";
-
-const LOW_COST_FILTER = "0\\.[0-5]|低倍率|省流|实验性";
-const LOW_COST_GROUP_PATTERN = "(?i)0\\.[0-5]|低倍率|省流|实验性";
-const LANDING_PATTERN = "(?i)家宽|家庭宽带|商宽|商业宽带|星链|Starlink|落地";
 
 export function buildCountryProxyGroups({
     countries,
@@ -40,17 +43,13 @@ export function buildCountryProxyGroups({
 
         if (!regexFilter) {
             const nodeNames = nodesByCountry?.[country] || [];
-            Object.assign(groupConfig, {
-                proxies: nodeNames,
-            });
+            groupConfig["proxies"] = nodeNames;
         } else {
             Object.assign(groupConfig, {
                 "include-all": true,
                 filter: meta.pattern,
-                "exclude-filter": landing
-                    ? `${LANDING_PATTERN}|${LOW_COST_FILTER}`
-                    : LOW_COST_FILTER,
             });
+            if (landing) groupConfig["exclude-filter"] = LANDING_NODE_MATCHER.pattern;
         }
 
         groups.push(groupConfig);
@@ -97,7 +96,7 @@ export function buildProxyGroups({
                   ...(regexFilter
                       ? {
                             "include-all": true,
-                            "exclude-filter": LANDING_PATTERN,
+                            "exclude-filter": LANDING_NODE_MATCHER.pattern,
                             proxies: frontProxySelector,
                         }
                       : { proxies: frontProxySelector }),
@@ -109,7 +108,7 @@ export function buildProxyGroups({
                   icon: `${CDN_URL}/gh/Koolson/Qure@master/IconSet/Color/Airport.png`,
                   type: "select",
                   ...(regexFilter
-                      ? { "include-all": true, filter: LANDING_PATTERN }
+                      ? { "include-all": true, filter: LANDING_NODE_MATCHER.pattern }
                       : { proxies: landingNodes }),
               }
             : null,
@@ -250,7 +249,7 @@ export function buildProxyGroups({
                   tolerance: 20,
                   ...(!regexFilter
                       ? { proxies: lowCostNodes }
-                      : { "include-all": true, filter: LOW_COST_GROUP_PATTERN }),
+                      : { "include-all": true, filter: LOW_COST_NODE_MATCHER.pattern }),
               }
             : null,
         {

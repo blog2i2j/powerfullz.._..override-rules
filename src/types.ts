@@ -33,6 +33,12 @@ export interface CountryInfoItem {
     nodes: string[];
 }
 
+export interface CaseInsensitiveNodeMatcher {
+    source: string;
+    regex: RegExp;
+    pattern: string;
+}
+
 export interface BaseLists {
     defaultProxies: string[];
     defaultProxiesDirect: string[];

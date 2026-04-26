@@ -1,8 +1,10 @@
-import { NODE_SUFFIX, countriesMeta } from "./constants";
+import {
+    LANDING_NODE_MATCHER,
+    NODE_SUFFIX,
+    LOW_COST_NODE_MATCHER,
+    countriesMeta,
+} from "./constants";
 import type { ClashConfig, CountryInfoItem } from "./types";
-
-const LOW_COST_REGEX = /0\.[0-5]|低倍率|省流|实验性/i;
-const LANDING_REGEX = /家宽|家庭宽带|商宽|商业宽带|星链|Starlink|落地/i;
 
 const COUNTRY_REGEX_MAP = Object.fromEntries(
     Object.entries(countriesMeta).map(([country, meta]) => {
@@ -12,7 +14,7 @@ const COUNTRY_REGEX_MAP = Object.fromEntries(
 
 export function parseLowCost(config: ClashConfig): string[] {
     return (config.proxies || [])
-        .filter((proxy) => LOW_COST_REGEX.test(proxy.name || ""))
+        .filter((proxy) => LOW_COST_NODE_MATCHER.regex.test(proxy.name || ""))
         .map((proxy) => proxy.name)
         .filter((name): name is string => Boolean(name));
 }
@@ -28,7 +30,7 @@ export function parseNodesByLanding(config: ClashConfig): {
         const name = proxy.name;
         if (!name) continue;
 
-        if (LANDING_REGEX.test(name)) {
+        if (LANDING_NODE_MATCHER.regex.test(name)) {
             landingNodes.push(name);
             continue;
         }
@@ -49,8 +51,7 @@ export function parseCountries(config: ClashConfig): CountryInfoItem[] {
     for (const proxy of proxies) {
         const name = proxy.name || "";
 
-        if (LANDING_REGEX.test(name)) continue;
-        if (LOW_COST_REGEX.test(name)) continue;
+        if (LANDING_NODE_MATCHER.regex.test(name)) continue;
 
         for (const [country, regex] of Object.entries(COUNTRY_REGEX_MAP)) {
             if (!regex.test(name)) continue;

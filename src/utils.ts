@@ -1,3 +1,5 @@
+import type { CaseInsensitiveNodeMatcher } from "./types";
+
 /**
  * 解析布尔值，支持 boolean、"true" 和 "1"。
  */
@@ -23,4 +25,12 @@ export function parseNumber(value: unknown, defaultValue = 0): number {
  */
 export function buildList<T>(...elements: Array<T | T[] | false | null | undefined>): T[] {
     return elements.flat().filter(Boolean) as T[];
+}
+
+export function createCaseInsensitiveNodeMatcher(source: string): CaseInsensitiveNodeMatcher {
+    return {
+        source,
+        regex: new RegExp(source, "i"),
+        pattern: `(?i)${source}`,
+    };
 }
