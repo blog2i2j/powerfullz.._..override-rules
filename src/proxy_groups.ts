@@ -233,7 +233,7 @@ export function buildProxyGroups({
         },
         {
             name: PROXY_GROUPS.PORN,
-            icon: `${CDN_URL}/gh/powerfullz/override-rules@master/icons/Pornhub_2.png`,
+            icon: `${CDN_URL}/gh/Koolson/Qure@master/IconSet/Color/Pornhub_2.png`,
             type: "select",
             proxies: defaultProxies,
         },
