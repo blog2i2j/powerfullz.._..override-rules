@@ -130,12 +130,4 @@ export const countriesMeta: Record<string, CountryMeta> = {
         pattern: "马来西亚|马来|\\b(?:MY|my)(?:[-_ ]?\\d+(?:[-_ ]?[A-Za-z]{2,})?)?\\b|Malaysia|🇲🇾",
         icon: `${CDN_URL}/gh/Koolson/Qure@master/IconSet/Color/Malaysia.png`,
     },
-    荷兰: {
-        pattern: "荷兰|\\b(?:NL|nl)(?:[-_ ]?\\d+(?:[-_ ]?[A-Za-z]{2,})?)?\\b|Netherlands|🇳🇱",
-        icon: `${CDN_URL}/gh/Koolson/Qure@master/IconSet/Color/Netherlands.png`,
-    },
-    土耳其: {
-        pattern: "土耳其|\\b(?:TR|tr)(?:[-_ ]?\\d+(?:[-_ ]?[A-Za-z]{2,})?)?\\b|Turkey|🇹🇷",
-        icon: `${CDN_URL}/gh/Koolson/Qure@master/IconSet/Color/Turkey.png`,
-    },
 };
