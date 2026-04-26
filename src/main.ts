@@ -67,7 +67,7 @@ const {
 function main(config: ClashConfig): ClashConfig {
     const resultConfig: ClashConfig = { proxies: config.proxies };
 
-    const countryInfo = parseCountries(resultConfig);
+    const countryInfo = parseCountries(resultConfig, landing);
     const lowCostNodes = parseLowCost(resultConfig);
     const countryGroupNames = getCountryGroupNames(countryInfo, countryThreshold);
     const countries = stripNodeSuffix(countryGroupNames);

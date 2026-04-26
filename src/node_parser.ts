@@ -44,14 +44,14 @@ export function parseNodesByLanding(config: ClashConfig): {
 /**
  * 遍历订阅中的所有节点，按 `countriesMeta` 中定义的地区进行归类。
  */
-export function parseCountries(config: ClashConfig): CountryInfoItem[] {
+export function parseCountries(config: ClashConfig, landing = false): CountryInfoItem[] {
     const proxies = config.proxies || [];
     const countryNodes: Record<string, string[]> = Object.create(null);
 
     for (const proxy of proxies) {
         const name = proxy.name || "";
 
-        if (LANDING_NODE_MATCHER.regex.test(name)) continue;
+        if (landing && LANDING_NODE_MATCHER.regex.test(name)) continue;
 
         for (const [country, regex] of Object.entries(COUNTRY_REGEX_MAP)) {
             if (!regex.test(name)) continue;
